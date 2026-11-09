@@ -1,0 +1,7 @@
+node_modules/
+client/dist/
+infra/.terraform/
+infra/kubeconfig
+*.tfstate
+*.tfstate.*
+.DS_Store

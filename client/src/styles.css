@@ -1,0 +1,39 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", sans-serif;
+  background: #eef2f6;
+  color: #1c2430;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 36rem;
+  margin: 4rem auto;
+  padding: 2rem 2.25rem;
+  background: #ffffff;
+  border: 1px solid #d5dee8;
+  border-radius: 16px;
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5c6b7c;
+}
+
+h1 {
+  margin: 0 0 1.25rem;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+#version,
+#pod {
+  margin: 0.35rem 0;
+  color: #334155;
+}
