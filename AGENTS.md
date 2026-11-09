@@ -33,14 +33,15 @@ Keep this stack. The details live in `docs/STRUCTURE.md`.
 - Node.js (Express) for `GET /` and `GET /healthz`
 - Automated tests live in `test/` on `main`: `test/unit` and `test/functional` only, until a later step adds more
 - One Docker image, process uid 1000
-- Terraform, kind (1 control-plane + 2 workers), ingress-nginx, Argo CD
+- Terraform, kind (1 control-plane + 2 workers), ingress-nginx
+- Argo CD deferred for this build; apply `k8s/` with kubectl until Argo is installed
 - GitHub Actions and GHCR only after the page opens in the browser
 
 ## Working rules
 
 - `GET /` returns HTML. The body text includes the message, the app version, and the pod name. `GET /healthz` returns 200.
 - The image and the pod run as uid 1000.
-- Argo CD syncs `k8s/`. A later CI workflow updates the image tag in git. It does not run `kubectl apply`.
+- For now: `kubectl apply -f k8s/` after `kind load docker-image`. Argo CD sync of `k8s/` is deferred.
 - Keep `infra/kubeconfig` out of git. Point `KUBECONFIG` at that file.
 - At **17:45** stop new scope. Finish the README close-out, push, and leave the cluster running.
 - The assignment review reads the git history. Commit when the user asks, and remind them at the end of each finished step if the work is still uncommitted.

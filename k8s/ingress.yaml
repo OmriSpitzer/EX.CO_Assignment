@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: exco-web
+  namespace: exco
+  labels:
+    app: exco-web
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: exco-web
+                port:
+                  number: 80

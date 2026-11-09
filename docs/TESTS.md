@@ -30,9 +30,10 @@ Use `curl.exe`, not `curl`. In Windows PowerShell 5, `curl` is an alias of `Invo
 | `GET /` is HTML and shows message, version, and pod name | Unit tests, Functionality tests, Image run, Browser |
 | `GET /healthz` returns 200 | Functionality tests, Image run, Workload |
 | Image runs as a non-root user | Image run |
-| Terraform builds 1 control-plane + 2 workers, ingress, Argo CD | Cluster shape, Controllers |
+| Terraform builds 1 control-plane + 2 workers and ingress (Argo deferred) | Cluster shape, Controllers |
 | `terraform apply` creates it, `terraform destroy` removes it | Cluster shape, Destroy |
-| Manifests in git, Argo CD syncs them, no `kubectl apply` from CI | Argo CD, GitOps rollout |
+| Manifests in git; applied with kubectl for now (Argo deferred) | App deploy |
+| Later: Argo CD syncs them, no `kubectl apply` from CI | Argo CD, GitOps rollout |
 | At least 2 replicas, readiness, liveness, requests, limits | Workload |
 | Ingress opens in the browser on this laptop | Browser |
 | Push to `main` builds and pushes a SHA tag to GHCR | Registry |
@@ -134,11 +135,10 @@ Step 1.1.
 
 ```powershell
 kubectl get pods -n ingress-nginx
-kubectl get pods -n argocd
 kubectl get svc -n ingress-nginx
 ```
 
-Pass: ingress-nginx controller pod `Running`, Argo CD server pod `Running`. The controller is scheduled on the node labeled `ingress-ready=true`.
+Pass: ingress-nginx controller pod `Running` on the node labeled `ingress-ready=true`. Argo CD is deferred for this build, so no `argocd` pods are required.
 
 ## Destroy
 
@@ -148,32 +148,34 @@ Step 1.2.
 terraform -chdir=infra plan -destroy
 ```
 
-Pass: the plan lists the kind cluster, the ingress Helm release, and the Argo CD Helm release for destroy.
+Pass: the plan lists the kind cluster and the ingress Helm release for destroy (2 to destroy in the current Terraform).
 
 If a real destroy was run, `kind get clusters` no longer lists `exco`, and a following `terraform apply` makes “Cluster shape” and “Controllers” pass again. If the clock is after 17:30, skip the real destroy and leave the cluster up. The plan output is the check.
 
+## App deploy
+
+Step 2.1 (current path without Argo CD).
+
+```powershell
+kind load docker-image exco-web:local --name exco
+kubectl apply -f k8s/00-namespace.yaml
+kubectl apply -f k8s/
+kubectl get pods -n exco
+kubectl get deploy,svc,ingress -n exco
+```
+
+Pass: Deployment `exco-web` exists, pods are `Running`/`Ready`, Service and Ingress exist. Apply `00-namespace.yaml` first so alphabetical `kubectl apply -f k8s/` does not race the namespace.
+
 ## Argo CD
 
-Step 2.1.
+Deferred. When Argo is installed later, replace “App deploy” with:
 
 ```powershell
 kubectl get application exco-web -n argocd
 kubectl get pods -n exco
 ```
 
-Pass: `Synced` and `Healthy`. Pods in `exco` belong to Deployment `exco-web`. The Deployment was created by the Argo CD application (the application status names `k8s/deployment.yaml`), which you can confirm in the Argo CD UI or with:
-
-```powershell
-kubectl get application exco-web -n argocd -o jsonpath="{.status.sync.status} {.status.health.status}"
-```
-
-Argo CD admin UI, if you want it during the review:
-
-```powershell
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}"
-```
-
-Decode that base64 password. Port-forward `svc/argocd-server` 8081 → 443 and open https://localhost:8081 (user `admin`). Port 8080 stays on the app ingress.
+Pass then: `Synced` and `Healthy`, and pods belong to Deployment `exco-web`.
 
 ## Workload
 
@@ -270,6 +272,6 @@ Pass: an Argo CD application for the monitoring stack is `Synced` and `Healthy`,
 
 ## What “done” means for the whole exercise
 
-Parts 0–2 are the bar for 18:00: Tools, Repository, Unit tests, Functionality tests, Image run, Cluster shape, Controllers, Destroy (plan is enough after 17:30), Argo CD, Workload, and Browser.
+Parts 0–2 are the bar for 18:00: Tools, Repository, Unit tests, Functionality tests, Image run, Cluster shape, Controllers, Destroy (plan is enough after 17:30), App deploy (Argo deferred), Workload, and Browser.
 
 Registry, GitOps rollout, and Rollout loop close Part 3. HPA and Metrics close the bonus installs. They stay unrun until those steps are actually done.

@@ -9,8 +9,9 @@ resource "helm_release" "ingress_nginx" {
 
   values = [yamlencode({
     controller = {
-      hostNetwork = true
-      dnsPolicy   = "ClusterFirstWithHostNet"
+      hostPort = {
+        enabled = true
+      }
       service = {
         type = "NodePort"
       }
@@ -27,26 +28,7 @@ resource "helm_release" "ingress_nginx" {
       publishService = {
         enabled = false
       }
-    }
-  })]
-
-  depends_on = [kind_cluster.exco]
-}
-
-resource "helm_release" "argocd" {
-  name             = "argocd"
-  repository       = "https://argoproj.github.io/argo-helm"
-  chart            = "argo-cd"
-  namespace        = "argocd"
-  create_namespace = true
-  wait             = true
-  timeout          = 600
-
-  values = [yamlencode({
-    configs = {
-      params = {
-        "server.insecure" = true
-      }
+      watchIngressWithoutClass = true
     }
   })]
 

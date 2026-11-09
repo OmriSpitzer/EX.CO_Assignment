@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: exco-web
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/OmriSpitzer/EX.CO_Assignment.git
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: exco
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

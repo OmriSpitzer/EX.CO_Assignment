@@ -1,0 +1,5 @@
+# Apply this first (or use: kubectl apply -f k8s/namespace.yaml -f k8s/).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exco
